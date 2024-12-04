@@ -1,18 +1,11 @@
+using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Highlighting;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
-using ScintillaNET;
-using System;
-using System.Drawing.Printing;
-using System.IO;
-using System.Linq.Expressions;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
-using System.Security.Policy;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows.Forms.Integration;
+using System.Windows.Input;
+using System.Windows.Media;
 using System.Xml.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace MtExpSolver
 {
@@ -31,6 +24,11 @@ namespace MtExpSolver
 
         public bool locked = false;
 
+        public TextEditor? editorIn = null;
+        public ElementHost? elementHostIn = null;
+        public TextEditor? editorOut = null;
+        public ElementHost? elementHostOut = null;
+
         public FormMtExpSolver(string path)
         {
             locked = true;
@@ -41,36 +39,62 @@ namespace MtExpSolver
 
             this.consoleForm = new ConsoleForm(this);
 
-            scintillaIn.Margins[0].Width = 40;
-            scintillaIn.Margins[0].BackColor = Color.LightGray;
-            scintillaIn.Styles[Style.LineNumber].ForeColor = System.Drawing.Color.Gray;
-            scintillaIn.Styles[Style.LineNumber].BackColor = System.Drawing.Color.LightGray;
-
-            scintillaIn.StyleClearAll();
-
-            
-            scintillaOut.Margins[0].Width = 40;
-            scintillaOut.Margins[0].BackColor = Color.LightGray;
-            scintillaOut.Styles[Style.Default].ForeColor = System.Drawing.Color.Black;
-            scintillaOut.Styles[Style.Default].BackColor = ColorTranslator.FromHtml("#DFDFDF");
-            scintillaOut.Styles[Style.LineNumber].ForeColor = System.Drawing.Color.Gray;
-            scintillaOut.Styles[Style.LineNumber].BackColor = System.Drawing.Color.Black;
-            scintillaOut.StyleClearAll();
-
             timer = new System.Windows.Forms.Timer();
             timer.Interval = 1000;
             timer.Tick += async (sender, e) => await Timer_Tick(sender, e);
             timer.Start();
-
             CreateContextmenuItems();
 
+            editorIn = new TextEditor();
+            elementHostIn = new ElementHost();
+            elementHostIn.Dock = DockStyle.Top;
+            elementHostIn.Child = editorIn;
+            elementHostIn.ContextMenuStrip = contextMenuStrip1;
+
+            editorIn.ShowLineNumbers = true;
+            editorIn.WordWrap = true;
+            editorIn.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+            editorIn.FontSize = 20;
+            editorIn.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+            editorIn.TextChanged += this.scintillaIn_TextChanged;
+            editorIn.KeyDown += KeyDown;
+            editorIn.PreviewMouseWheel += this.EditorIn_MouseWheel;
+            this.Controls.Add(elementHostIn);
+
+            ///////////////////////////
+
+            editorOut = new TextEditor();
+
+            editorOut.ShowLineNumbers = true;
+            editorOut.WordWrap = true;
+            editorOut.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+            editorOut.FontSize = 20;
+            editorOut.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+
+            elementHostOut = new ElementHost();
+            elementHostOut.Dock = DockStyle.Bottom;
+            elementHostOut.Child = editorOut;
+            elementHostOut.ContextMenuStrip = contextMenuStrip1;
+
+            editorOut.ShowLineNumbers = true;
+            editorOut.WordWrap = true;
+            editorOut.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+            editorOut.FontSize = 20;
+            editorOut.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+            editorOut.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(238, 238, 238));
+            editorOut.PreviewMouseWheel += this.EditorOut_MouseWheel;
+            editorOut.KeyDown += KeyDown;
+            editorOut.IsReadOnly = true;
+            this.Controls.Add(elementHostOut);
         }
 
         private void FormMtExpSolver_Load(object sender, EventArgs e)
         {
             this.RestoreState();
 
-            scintillaOut.ReadOnly = true;
+            elementHostIn.Height = (this.ClientSize.Height / 4) * 3;
+            elementHostOut.Height = (this.ClientSize.Height / 4) * 1;
+
             locked = false;
         }
 
@@ -134,7 +158,9 @@ namespace MtExpSolver
 
         public void insertText(string text)
         {
-            scintillaIn.ReplaceSelection(text);
+
+            int caretPosition = editorIn.CaretOffset;
+            editorIn.Document.Insert(caretPosition, text);
         }
 
 
@@ -150,7 +176,7 @@ namespace MtExpSolver
                 try
                 {
                     Calculating = true;
-                    string script = scintillaIn.Text;
+                    string script = editorIn.Text;
                     if (script.Trim() != "")
                     {
                         this.Write("");
@@ -184,8 +210,8 @@ namespace MtExpSolver
                 return;
             }
 
-            scintillaIn.Height = (this.ClientSize.Height / 4) * 3;
-            scintillaOut.Height = (this.ClientSize.Height / 4) * 1;
+            elementHostIn.Height = (this.ClientSize.Height / 4) * 3;
+            elementHostOut.Height = (this.ClientSize.Height / 4) * 1;
         }
 
         private async Task<object?> RunScriptAsync(string jsCode, int timeout)
@@ -260,20 +286,15 @@ namespace MtExpSolver
 
         public void Write(string message)
         {
-            scintillaOut.ReadOnly = false;
-            scintillaOut.Text = message;
-            scintillaOut.SelectionStart = scintillaOut.TextLength;
-            scintillaOut.SelectionEnd = scintillaOut.TextLength;
-            scintillaOut.ScrollCaret();
-            scintillaOut.ReadOnly = true;
+            if (editorOut.Text != message) {
+                editorOut.Text = message;
+            }
 
         }
 
         private void clearToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            scintillaOut.ReadOnly = false;
-            scintillaOut.Text = "";
-            scintillaOut.ReadOnly = true;
+            editorOut.Text = "";
         }
 
         private void functionsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -297,13 +318,15 @@ namespace MtExpSolver
             try
             {
                 var xml = new XElement("Root",
-                    new XElement("in", scintillaIn.Text),
-                    new XElement("out", scintillaOut.Text),
+                    new XElement("in", editorIn.Text),
+                    new XElement("out", editorOut.Text),
                     new XElement("Left", this.Left),
                     new XElement("Top", this.Top),
                     new XElement("Width", this.Width),
                     new XElement("Height", this.Height),
-                    new XElement("TopMost", this.TopMost)
+                    new XElement("TopMost", this.TopMost),
+                    new XElement("FontInSize", editorIn.FontSize),
+                    new XElement("FontOutSize", editorOut.FontSize)
                 );
 
                 xml.Save(this.path);
@@ -324,16 +347,17 @@ namespace MtExpSolver
             try
             {
                 var xml = XElement.Load(this.path);
-                scintillaIn.Text = xml.Element("in")?.Value ?? "";
-                scintillaOut.Text = xml.Element("out")?.Value ?? "";
+                editorIn.Text = xml.Element("in")?.Value ?? "";
+                editorOut.Text = xml.Element("out")?.Value ?? "";
 
                 this.StartPosition = FormStartPosition.Manual;
                 this.Left = int.Parse(xml.Element("Left")?.Value);
                 this.Top = int.Parse(xml.Element("Top")?.Value);
                 this.Width = int.Parse(xml.Element("Width")?.Value);
                 this.Height = int.Parse(xml.Element("Height")?.Value);
-
                 this.TopMost = bool.Parse(xml.Element("TopMost")?.Value);
+                this.editorIn.FontSize = int.Parse(xml.Element("FontInSize")?.Value);
+                this.editorOut.FontSize = int.Parse(xml.Element("FontOutSize")?.Value);
 
             }
             catch (Exception ex)
@@ -398,5 +422,42 @@ namespace MtExpSolver
         {
             this.SaveState();
         }
+
+        public void EditorIn_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
+            {
+                if (e.Delta > 0)
+                    editorIn.FontSize += 1;
+                else if (editorIn.FontSize > 1)
+                    editorIn.FontSize -= 1;
+
+                e.Handled = true;
+            }
+        }
+
+        public void EditorOut_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
+            {
+                if (e.Delta > 0)
+                    editorOut.FontSize += 1;
+                else if (editorOut.FontSize > 1)
+                    editorOut.FontSize -= 1;
+
+                e.Handled = true;
+            }
+        }
+
+        private void KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            bool isCtrlPressed = (Control.ModifierKeys & Keys.Control) == Keys.Control;
+
+            if (isCtrlPressed && e.Key == Key.S)
+            {
+                SaveState();
+            }
+        }
+
     }
 }

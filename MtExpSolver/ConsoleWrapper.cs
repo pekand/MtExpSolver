@@ -15,14 +15,14 @@ namespace MtExpSolver
 
         public event MessageEventHandler MessageEvent;
 
-        public void log(string message)
+        public void log(object message)
         {
-            MessageEvent?.Invoke(message);
+            MessageEvent?.Invoke(message.ToString());
         }
 
-        public void error(string message)
+        public void error(object message)
         {
-            MessageEvent?.Invoke(message);
+            MessageEvent?.Invoke(message.ToString());
         }
     }
 }

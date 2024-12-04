@@ -30,7 +30,6 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMtExpSolver));
-            scintillaIn = new ScintillaNET.Scintilla();
             contextMenuStrip1 = new ContextMenuStrip(components);
             functionsToolStripMenuItem = new ToolStripMenuItem();
             fileToolStripMenuItem = new ToolStripMenuItem();
@@ -42,24 +41,8 @@
             optionsToolStripMenuItem = new ToolStripMenuItem();
             mostTopToolStripMenuItem = new ToolStripMenuItem();
             exitToolStripMenuItem = new ToolStripMenuItem();
-            scintillaOut = new ScintillaNET.Scintilla();
             contextMenuStrip1.SuspendLayout();
             SuspendLayout();
-            // 
-            // scintillaIn
-            // 
-            scintillaIn.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 215);
-            scintillaIn.BorderStyle = ScintillaNET.BorderStyle.None;
-            scintillaIn.ContextMenuStrip = contextMenuStrip1;
-            scintillaIn.Dock = DockStyle.Top;
-            scintillaIn.Font = new Font("Consolas", 15.75F);
-            scintillaIn.LexerName = null;
-            scintillaIn.Location = new Point(0, 0);
-            scintillaIn.Name = "scintillaIn";
-            scintillaIn.ScrollWidth = 93;
-            scintillaIn.Size = new Size(911, 470);
-            scintillaIn.TabIndex = 8;
-            scintillaIn.TextChanged += scintillaIn_TextChanged;
             // 
             // contextMenuStrip1
             // 
@@ -137,19 +120,6 @@
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
-            // scintillaOut
-            // 
-            scintillaOut.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 215);
-            scintillaOut.BorderStyle = ScintillaNET.BorderStyle.None;
-            scintillaOut.Dock = DockStyle.Bottom;
-            scintillaOut.Font = new Font("Consolas", 15.75F);
-            scintillaOut.LexerName = null;
-            scintillaOut.Location = new Point(0, 468);
-            scintillaOut.Name = "scintillaOut";
-            scintillaOut.ScrollWidth = 49;
-            scintillaOut.Size = new Size(911, 145);
-            scintillaOut.TabIndex = 9;
-            // 
             // FormMtExpSolver
             // 
             AutoScaleDimensions = new SizeF(8F, 19F);
@@ -157,8 +127,6 @@
             BackColor = Color.White;
             ClientSize = new Size(911, 613);
             ContextMenuStrip = contextMenuStrip1;
-            Controls.Add(scintillaOut);
-            Controls.Add(scintillaIn);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormMtExpSolver";
             StartPosition = FormStartPosition.CenterScreen;
@@ -172,9 +140,7 @@
 
         #endregion
         private Label labelError;
-        private ScintillaNET.Scintilla scintillaIn;
         private ContextMenuStrip contextMenuStrip1;
-        private ScintillaNET.Scintilla scintillaOut;
         private ToolStripMenuItem exitToolStripMenuItem;
         private ToolStripMenuItem fileToolStripMenuItem;
         private ToolStripMenuItem openToolStripMenuItem;

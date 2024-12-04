@@ -1,4 +1,5 @@
-﻿using ScintillaNET;
+﻿using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Highlighting;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,13 +9,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.Integration;
 
 namespace MtExpSolver
 {
     public partial class ConsoleForm : Form
     {
+        public FormMtExpSolver? MtExpSolver = null;
 
-        FormMtExpSolver? MtExpSolver = null;
+        public TextEditor? editor = null;
+        public ElementHost? editorHost = null;
 
         public ConsoleForm(FormMtExpSolver MtExpSolver)
         {
@@ -23,6 +27,25 @@ namespace MtExpSolver
             this.MtExpSolver = MtExpSolver;
 
             MtExpSolver.consoleWrapper.MessageEvent += Write;
+
+            editor = new TextEditor();
+            editorHost = new ElementHost();
+            editorHost.Dock = DockStyle.Fill;
+            editorHost.Child = editor;
+
+            editor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+            editor.WordWrap = true;
+            editor.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+            editor.FontSize = 20;
+            editor.IsReadOnly = true;
+
+            this.Controls.Add(editorHost);
+
+        }
+
+        private void Console_Load(object sender, EventArgs e)
+        {
+
         }
 
         public void Write(string message)
@@ -31,22 +54,18 @@ namespace MtExpSolver
                 return;
             }
 
-            if (scintilla1.InvokeRequired)
+            if (editorHost.InvokeRequired)
             {
-                scintilla1.Invoke(new Action(() => scintilla1.Text += message + "\n"));
+                editorHost.Invoke(new Action(() => editor.Text += message + "\n"));
             }
             else
             {
-                scintilla1.Text += message + "\n";
+                editor.Text += message + "\n";
             }
 
             
         }
 
-        private void Console_Load(object sender, EventArgs e)
-        {
-            scintilla1.Margins[0].Width = 40;
-            scintilla1.Margins[0].BackColor = Color.Black;
-        }
+        
     }
 }

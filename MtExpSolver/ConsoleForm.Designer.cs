@@ -29,27 +29,13 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConsoleForm));
-            scintilla1 = new ScintillaNET.Scintilla();
             SuspendLayout();
-            // 
-            // scintilla1
-            // 
-            scintilla1.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 215);
-            scintilla1.Dock = DockStyle.Fill;
-            scintilla1.Font = new Font("Consolas", 15.75F);
-            scintilla1.LexerName = null;
-            scintilla1.Location = new Point(0, 0);
-            scintilla1.Name = "scintilla1";
-            scintilla1.ScrollWidth = 120;
-            scintilla1.Size = new Size(800, 450);
-            scintilla1.TabIndex = 0;
             // 
             // ConsoleForm
             // 
             AutoScaleDimensions = new SizeF(8F, 19F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(scintilla1);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ConsoleForm";
             StartPosition = FormStartPosition.CenterScreen;
@@ -59,7 +45,5 @@
         }
 
         #endregion
-
-        private ScintillaNET.Scintilla scintilla1;
     }
 }

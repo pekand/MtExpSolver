@@ -177,11 +177,15 @@ namespace MtExpSolver
                 {
                     Calculating = true;
                     string script = editorIn.Text;
+                    
                     if (script.Trim() != "")
                     {
                         this.Write("");
                         var result = await RunScriptAsync(script, timeout: 5000);
                         this.Write(result.ToString());
+                    }
+                    else {
+                        this.Write("");
                     }
                 }
                 catch (Exception ex)
@@ -307,7 +311,6 @@ namespace MtExpSolver
             this.consoleForm.Show();
         }
 
-
         public void SaveState()
         {
             if (path == "")
@@ -365,8 +368,6 @@ namespace MtExpSolver
                 consoleForm.Write(ex.Message);
             }
         }
-
-
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {

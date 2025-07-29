@@ -32,6 +32,7 @@ LicenseFile=LICENSE
 OutputBaseFilename=MtExpSolver-v{#MyAppVersion}
 SolidCompression=yes
 WizardStyle=modern
+ChangesAssociations = yes
 
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
@@ -46,7 +47,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "MtExpSolver\bin\x64\Release\net9.0-windows\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "MtExpSolver\bin\x64\Release\net9.0-windows\runtimes\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+Source: "MtExpSolver\bin\x64\Release\net9.0-windows\runtimes\*"; DestDir: "{app}\runtimes"; Flags: recursesubdirs createallsubdirs
 Source: "MtExpSolver\bin\x64\Release\net9.0-windows\ClearScript.Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "MtExpSolver\bin\x64\Release\net9.0-windows\ClearScript.V8.ICUData.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "MtExpSolver\bin\x64\Release\net9.0-windows\ClearScript.V8.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -66,3 +67,9 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[Registry]
+; Associate .MtExpSolver extension with MtExpSolver
+Root: HKCR; Subkey: ".MtExpSolver";                     ValueData: "{#MyAppName}";                      Flags: uninsdeletevalue; ValueType: string;  ValueName: ""
+Root: HKCR; Subkey: "{#MyAppName}";                     ValueData: "Program {#MyAppName}";              Flags: uninsdeletekey;   ValueType: string;  ValueName: ""
+Root: HKCR; Subkey: "{#MyAppName}\DefaultIcon";         ValueData: "{app}\{#MyAppExeName},0";                                    ValueType: string;  ValueName: ""
+Root: HKCR; Subkey: "{#MyAppName}\shell\open\command";  ValueData: """{app}\{#MyAppExeName}"" ""%1""";                           ValueType: string;  ValueName: ""

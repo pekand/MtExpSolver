@@ -8,6 +8,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>MtExpSolverSmall.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
+
+    <Product>MtExpSolver</Product>
+    <AssemblyVersion>$([System.IO.File]::ReadAllText('version.txt').Trim())</AssemblyVersion>
+    <BuildDate>$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</BuildDate>    
+    <VersionPrefix>$(AssemblyVersion)</VersionPrefix>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+    <Copyright>© 2025 Built on $(BuildDate)</Copyright>
+    <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,9 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
-    <PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.5" />
-    <PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.4.5" />
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="Microsoft.ClearScript.V8" Version="7.5.0" />
+    <PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.5.0" />
   </ItemGroup>
 
 </Project>

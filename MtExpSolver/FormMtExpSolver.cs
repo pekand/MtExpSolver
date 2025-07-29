@@ -2,10 +2,12 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
+using System;
 using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MtExpSolver
 {
@@ -154,6 +156,110 @@ namespace MtExpSolver
             TrigonometryItem.DropDownItems.Add(new ToolStripMenuItem("tan(x)", null, (s, e) => insertText("Math.tan()")));
             TrigonometryItem.DropDownItems.Add(new ToolStripMenuItem("tanh(x)", null, (s, e) => insertText("Math.tanh()")));
 
+            var JavaScriptItem = new ToolStripMenuItem("JavaScript", null);
+            functionsToolStripMenuItem.DropDownItems.Add(JavaScriptItem);
+
+            var JSOperatorsItem = new ToolStripMenuItem("Operators", null);
+            JavaScriptItem.DropDownItems.Add(JSOperatorsItem);
+
+            
+            var AssignmentOperatorsItem = new ToolStripMenuItem("Assignment operators", null);
+            JSOperatorsItem.DropDownItems.Add(AssignmentOperatorsItem);
+
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Assignment x = y",                         null, (s, e) => insertText("x = y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Addition assignment x += y",               null, (s, e) => insertText("x += y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Subtraction assignment x -= y",            null, (s, e) => insertText("x -= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Multiplication assignment x *= y",         null, (s, e) => insertText("x *= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Division assignment x /= y",               null, (s, e) => insertText("x /= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Remainder assignment x %= y",              null, (s, e) => insertText("x %= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Exponentiation assignment x **= y",        null, (s, e) => insertText("x **= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Left shift assignment x <<= y",            null, (s, e) => insertText("x <<= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Right shift assignment x >>= y",           null, (s, e) => insertText("x >>= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Unsigned right shift assignment x >>>= y", null, (s, e) => insertText("x >>>= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise AND assignment x &= y",            null, (s, e) => insertText("x &= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise XOR assignment x ^= y",            null, (s, e) => insertText("x ^= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise OR assignment x |= y",             null, (s, e) => insertText("x |= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical AND assignment x &&= y",           null, (s, e) => insertText("x &&= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical OR assignment x ||= y",            null, (s, e) => insertText("x ||= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Nullish coalescing assignment x ??= y",    null, (s, e) => insertText("x ??= y")));
+
+            var ComparisonOperatorsItem = new ToolStripMenuItem("Comparison operators", null);
+            JSOperatorsItem.DropDownItems.Add(ComparisonOperatorsItem);
+
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Equal (a==b)",                   null, (s, e) => insertText("a == b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Not equal (a!=b)",               null, (s, e) => insertText("a != b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Strict equal (a===b)",           null, (s, e) => insertText("a === b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Strict not equal (a!==b)",       null, (s, e) => insertText("a !== b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Greater than (a>b)",             null, (s, e) => insertText("a > b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Greater than or equal (a>=b)",   null, (s, e) => insertText("a >= b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Less than (a<)",                null, (s, e) => insertText("a < b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Less than or equal (a<=b)",      null, (s, e) => insertText("a <= b")));
+
+            var ArithmeticOperatorsItem = new ToolStripMenuItem("Arithmetic operators", null);
+            JSOperatorsItem.DropDownItems.Add(ArithmeticOperatorsItem);
+
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Remainder (a % b)", null, (s, e) => insertText("a % b")));
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Increment (a++)", null, (s, e) => insertText("a++")));
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Increment (++a)", null, (s, e) => insertText("++a")));
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Decrement (a--)", null, (s, e) => insertText("a--")));
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Decrement (--a)", null, (s, e) => insertText("--a")));
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Unary negation (-a)", null, (s, e) => insertText("-a")));
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Unary plus (+a)", null, (s, e) => insertText("+a")));
+            ArithmeticOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Exponentiation operator (a**b)", null, (s, e) => insertText("a**b")));
+
+            var BitwiseOperatorsItem = new ToolStripMenuItem("Bitwise operators", null);
+            JSOperatorsItem.DropDownItems.Add(BitwiseOperatorsItem);
+
+            BitwiseOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise AND (a&b)", null, (s, e) => insertText("a&b")));
+            BitwiseOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise OR (a|b)", null, (s, e) => insertText("a|b")));
+            BitwiseOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise XOR (a^b)", null, (s, e) => insertText("a^b")));
+            BitwiseOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise NOT (~a)", null, (s, e) => insertText("~a")));
+            BitwiseOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Left shift (a<<n)", null, (s, e) => insertText("a<<n")));
+            BitwiseOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Sign-propagating right shift (a>>n)", null, (s, e) => insertText("a>>n")));
+            BitwiseOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Zero-fill right shift (a>>>n)", null, (s, e) => insertText("a>>>n")));
+
+            var LogicalOperatorsItem = new ToolStripMenuItem("Logical operators", null);
+            JSOperatorsItem.DropDownItems.Add(LogicalOperatorsItem);
+
+            LogicalOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical AND (a && b)", null, (s, e) => insertText("a && b")));
+            LogicalOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical OR (a || b)", null, (s, e) => insertText("a || b")));
+            LogicalOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Nullish coalescing operator (a ?? b)", null, (s, e) => insertText("a ?? b")));
+            LogicalOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical NOT (!a)", null, (s, e) => insertText("!a")));
+
+            var BigIntOperatorsItem = new ToolStripMenuItem("BigInt operators", null);
+            JSOperatorsItem.DropDownItems.Add(BigIntOperatorsItem);
+
+            BigIntOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("BigInt operators", null, (s, e) => insertText("\r\n1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000n")));
+
+
+            var StringOperatorsItem = new ToolStripMenuItem("String operators", null);
+            JSOperatorsItem.DropDownItems.Add(StringOperatorsItem);
+
+            StringOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("String operators", null, (s, e) => insertText("\"string\" + \"string\"")));
+
+            var ConditionalOperatorItem = new ToolStripMenuItem("Conditional (ternary) operator", null);
+            JSOperatorsItem.DropDownItems.Add(ConditionalOperatorItem);
+
+            ConditionalOperatorItem.DropDownItems.Add(new ToolStripMenuItem("Conditional (ternary) operator ( true ? a : b )", null, (s, e) => insertText(" true ? a : b ")));
+
+            var CommaOperatorItem = new ToolStripMenuItem("Comma operator", null);
+            JSOperatorsItem.DropDownItems.Add(CommaOperatorItem);
+
+            CommaOperatorItem.DropDownItems.Add(new ToolStripMenuItem("Comma operator", null, (s, e) => insertText("var x = [0, 1, 2]")));
+
+            var UnaryOperatorsItem = new ToolStripMenuItem("Unary operators", null);
+            JSOperatorsItem.DropDownItems.Add(UnaryOperatorsItem);
+
+            UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("delete (delete object.property)", null, (s, e) => insertText("delete object.property")));
+            UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("delete (delete object[propertyKey])", null, (s, e) => insertText("delete object[propertyKey]")));
+            UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("typeof (typeof a)", null, (s, e) => insertText("typeof a")));
+            UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("void", null, (s, e) => insertText("void")));            
+            
+            var RelationalOperatorsItem = new ToolStripMenuItem("Relational operators", null);
+            JSOperatorsItem.DropDownItems.Add(RelationalOperatorsItem);
+
+            RelationalOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("in (propNameOrNumber in objectName)", null, (s, e) => insertText("\"PI\" in Math")));
+            RelationalOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("instanceof (object instanceof objectType)", null, (s, e) => insertText("const obj = new Map();\r\nif (obj instanceof Map) {\r\n  // statements to execute\r\n}")));
         }
 
         public void insertText(string text)

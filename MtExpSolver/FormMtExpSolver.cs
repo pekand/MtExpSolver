@@ -622,13 +622,6 @@ namespace MtExpSolver
             if (this.darkMode)
             {
 
-                //RGB(166,172,185)
-                //System.Windows.Media.Color.FromRgb(198,149,198)
-
-                // RGB(200,75,68) true
-                // RGB(198,149,198) math
-
-
                 editorIn.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 56, 65));
                 editorIn.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(216, 222, 233));
                 editorIn.TextArea.SelectionBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120, 100, 120, 170));

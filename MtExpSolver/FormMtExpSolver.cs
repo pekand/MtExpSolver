@@ -1,13 +1,17 @@
-using ICSharpCode.AvalonEdit;
+﻿using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
 using System;
+using System.Text.RegularExpressions;
 using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Xml;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Brush = System.Windows.Media.Brush;
 
 namespace MtExpSolver
 {
@@ -31,6 +35,14 @@ namespace MtExpSolver
         public TextEditor? editorOut = null;
         public ElementHost? elementHostOut = null;
 
+        public bool darkMode = false;
+
+        private Brush editorDefaultBackground;
+        private Brush editorDefaultForeground;
+        private Brush editorDefaultSelectionBrush;
+        private Brush editorDefaultCaretBrush;
+        private Brush editorDefaultCurrentLineBackground;
+
         public FormMtExpSolver(string path)
         {
             locked = true;
@@ -51,13 +63,13 @@ namespace MtExpSolver
             elementHostIn = new ElementHost();
             elementHostIn.Dock = DockStyle.Top;
             elementHostIn.Child = editorIn;
-            elementHostIn.ContextMenuStrip = contextMenuStrip1;
+            elementHostIn.ContextMenuStrip = contextMenuStrip;
 
             editorIn.ShowLineNumbers = true;
             editorIn.WordWrap = true;
             editorIn.FontFamily = new System.Windows.Media.FontFamily("Consolas");
             editorIn.FontSize = 20;
-            editorIn.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+            editorIn.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");            
             editorIn.TextChanged += this.scintillaIn_TextChanged;
             editorIn.KeyDown += KeyDown;
             editorIn.PreviewMouseWheel += this.EditorIn_MouseWheel;
@@ -76,7 +88,7 @@ namespace MtExpSolver
             elementHostOut = new ElementHost();
             elementHostOut.Dock = DockStyle.Bottom;
             elementHostOut.Child = editorOut;
-            elementHostOut.ContextMenuStrip = contextMenuStrip1;
+            elementHostOut.ContextMenuStrip = contextMenuStrip;
 
             editorOut.ShowLineNumbers = true;
             editorOut.WordWrap = true;
@@ -88,6 +100,12 @@ namespace MtExpSolver
             editorOut.KeyDown += KeyDown;
             editorOut.IsReadOnly = true;
             this.Controls.Add(elementHostOut);
+
+            editorDefaultBackground = editorIn.Background;
+            editorDefaultForeground = editorIn.Foreground;
+            editorDefaultSelectionBrush = editorIn.TextArea.SelectionBrush;
+            editorDefaultCaretBrush = editorIn.TextArea.Caret.CaretBrush;
+            editorDefaultCurrentLineBackground = editorIn.TextArea.TextView.CurrentLineBackground;
         }
 
         private void FormMtExpSolver_Load(object sender, EventArgs e)
@@ -97,7 +115,9 @@ namespace MtExpSolver
             elementHostIn.Height = (this.ClientSize.Height / 4) * 3;
             elementHostOut.Height = (this.ClientSize.Height / 4) * 1;
 
-            locked = false;
+            this.switchDarkMode();
+
+            locked = false;            
         }
 
         public void CreateContextmenuItems()
@@ -162,38 +182,38 @@ namespace MtExpSolver
             var JSOperatorsItem = new ToolStripMenuItem("Operators", null);
             JavaScriptItem.DropDownItems.Add(JSOperatorsItem);
 
-            
+
             var AssignmentOperatorsItem = new ToolStripMenuItem("Assignment operators", null);
             JSOperatorsItem.DropDownItems.Add(AssignmentOperatorsItem);
 
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Assignment x = y",                         null, (s, e) => insertText("x = y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Addition assignment x += y",               null, (s, e) => insertText("x += y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Subtraction assignment x -= y",            null, (s, e) => insertText("x -= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Multiplication assignment x *= y",         null, (s, e) => insertText("x *= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Division assignment x /= y",               null, (s, e) => insertText("x /= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Remainder assignment x %= y",              null, (s, e) => insertText("x %= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Exponentiation assignment x **= y",        null, (s, e) => insertText("x **= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Left shift assignment x <<= y",            null, (s, e) => insertText("x <<= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Right shift assignment x >>= y",           null, (s, e) => insertText("x >>= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Assignment x = y", null, (s, e) => insertText("x = y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Addition assignment x += y", null, (s, e) => insertText("x += y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Subtraction assignment x -= y", null, (s, e) => insertText("x -= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Multiplication assignment x *= y", null, (s, e) => insertText("x *= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Division assignment x /= y", null, (s, e) => insertText("x /= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Remainder assignment x %= y", null, (s, e) => insertText("x %= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Exponentiation assignment x **= y", null, (s, e) => insertText("x **= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Left shift assignment x <<= y", null, (s, e) => insertText("x <<= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Right shift assignment x >>= y", null, (s, e) => insertText("x >>= y")));
             AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Unsigned right shift assignment x >>>= y", null, (s, e) => insertText("x >>>= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise AND assignment x &= y",            null, (s, e) => insertText("x &= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise XOR assignment x ^= y",            null, (s, e) => insertText("x ^= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise OR assignment x |= y",             null, (s, e) => insertText("x |= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical AND assignment x &&= y",           null, (s, e) => insertText("x &&= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical OR assignment x ||= y",            null, (s, e) => insertText("x ||= y")));
-            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Nullish coalescing assignment x ??= y",    null, (s, e) => insertText("x ??= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise AND assignment x &= y", null, (s, e) => insertText("x &= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise XOR assignment x ^= y", null, (s, e) => insertText("x ^= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Bitwise OR assignment x |= y", null, (s, e) => insertText("x |= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical AND assignment x &&= y", null, (s, e) => insertText("x &&= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Logical OR assignment x ||= y", null, (s, e) => insertText("x ||= y")));
+            AssignmentOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Nullish coalescing assignment x ??= y", null, (s, e) => insertText("x ??= y")));
 
             var ComparisonOperatorsItem = new ToolStripMenuItem("Comparison operators", null);
             JSOperatorsItem.DropDownItems.Add(ComparisonOperatorsItem);
 
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Equal (a==b)",                   null, (s, e) => insertText("a == b")));
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Not equal (a!=b)",               null, (s, e) => insertText("a != b")));
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Strict equal (a===b)",           null, (s, e) => insertText("a === b")));
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Strict not equal (a!==b)",       null, (s, e) => insertText("a !== b")));
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Greater than (a>b)",             null, (s, e) => insertText("a > b")));
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Greater than or equal (a>=b)",   null, (s, e) => insertText("a >= b")));
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Less than (a<)",                null, (s, e) => insertText("a < b")));
-            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Less than or equal (a<=b)",      null, (s, e) => insertText("a <= b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Equal (a==b)", null, (s, e) => insertText("a == b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Not equal (a!=b)", null, (s, e) => insertText("a != b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Strict equal (a===b)", null, (s, e) => insertText("a === b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Strict not equal (a!==b)", null, (s, e) => insertText("a !== b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Greater than (a>b)", null, (s, e) => insertText("a > b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Greater than or equal (a>=b)", null, (s, e) => insertText("a >= b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Less than (a<)", null, (s, e) => insertText("a < b")));
+            ComparisonOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("Less than or equal (a<=b)", null, (s, e) => insertText("a <= b")));
 
             var ArithmeticOperatorsItem = new ToolStripMenuItem("Arithmetic operators", null);
             JSOperatorsItem.DropDownItems.Add(ArithmeticOperatorsItem);
@@ -253,8 +273,8 @@ namespace MtExpSolver
             UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("delete (delete object.property)", null, (s, e) => insertText("delete object.property")));
             UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("delete (delete object[propertyKey])", null, (s, e) => insertText("delete object[propertyKey]")));
             UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("typeof (typeof a)", null, (s, e) => insertText("typeof a")));
-            UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("void", null, (s, e) => insertText("void")));            
-            
+            UnaryOperatorsItem.DropDownItems.Add(new ToolStripMenuItem("void", null, (s, e) => insertText("void")));
+
             var RelationalOperatorsItem = new ToolStripMenuItem("Relational operators", null);
             JSOperatorsItem.DropDownItems.Add(RelationalOperatorsItem);
 
@@ -269,11 +289,10 @@ namespace MtExpSolver
             editorIn.Document.Insert(caretPosition, text);
         }
 
-
-
         private async Task Timer_Tick(object sender, EventArgs e)
         {
-            if (locked) { 
+            if (locked)
+            {
                 return;
             }
 
@@ -283,14 +302,15 @@ namespace MtExpSolver
                 {
                     Calculating = true;
                     string script = editorIn.Text;
-                    
+
                     if (script.Trim() != "")
                     {
                         this.Write("");
                         var result = await RunScriptAsync(script, timeout: 5000);
                         this.Write(result.ToString());
                     }
-                    else {
+                    else
+                    {
                         this.Write("");
                     }
                 }
@@ -396,7 +416,8 @@ namespace MtExpSolver
 
         public void Write(string message)
         {
-            if (editorOut.Text != message) {
+            if (editorOut.Text != message)
+            {
                 editorOut.Text = message;
             }
 
@@ -434,6 +455,7 @@ namespace MtExpSolver
                     new XElement("Width", this.Width),
                     new XElement("Height", this.Height),
                     new XElement("TopMost", this.TopMost),
+                    new XElement("DarkMode", this.darkMode),
                     new XElement("FontInSize", editorIn.FontSize),
                     new XElement("FontOutSize", editorOut.FontSize)
                 );
@@ -465,6 +487,7 @@ namespace MtExpSolver
                 this.Width = int.Parse(xml.Element("Width")?.Value);
                 this.Height = int.Parse(xml.Element("Height")?.Value);
                 this.TopMost = bool.Parse(xml.Element("TopMost")?.Value);
+                this.darkMode = bool.Parse(xml.Element("DarkMode")?.Value);
                 this.editorIn.FontSize = int.Parse(xml.Element("FontInSize")?.Value);
                 this.editorOut.FontSize = int.Parse(xml.Element("FontOutSize")?.Value);
 
@@ -566,5 +589,91 @@ namespace MtExpSolver
             }
         }
 
+        // CONTEXT MENU OPENING
+        private void contextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            darkModeToolStripMenuItem.Checked = this.darkMode;
+        }
+
+
+        // CONTEXT MENU OPTIONS DARK MODE SQITCH
+        private void darkModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.darkMode = !this.darkMode;
+            switchDarkMode();
+        }
+
+
+        public void switchDarkMode() {
+            if (editorIn == null || editorOut== null)
+            {
+                return;
+            }
+
+
+            /*var def = editorIn.SyntaxHighlighting;
+            var names = def.NamedHighlightingColors
+               .Select(c => c.Name)
+               .ToList();
+
+            foreach (var n in names)
+                this.consoleForm.Write("Highlight name: " + n);*/
+
+            if (this.darkMode)
+            {
+
+                //RGB(166,172,185)
+                //System.Windows.Media.Color.FromRgb(198,149,198)
+
+                // RGB(200,75,68) true
+                // RGB(198,149,198) math
+
+
+                editorIn.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 56, 65));
+                editorIn.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(216, 222, 233));
+                editorIn.TextArea.SelectionBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120, 100, 120, 170));
+                editorIn.TextArea.Caret.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 220, 220));
+                editorIn.TextArea.TextView.CurrentLineBackground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(20, 255, 255, 255));
+
+                var highlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+                highlighting.GetNamedColor("Character").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(153, 199, 148));
+                highlighting.GetNamedColor("Comment").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(166, 172, 185));
+                highlighting.GetNamedColor("Digits").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(249, 171, 84));
+                highlighting.GetNamedColor("JavaScriptGlobalFunctions").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(216, 222, 233));
+                highlighting.GetNamedColor("JavaScriptIntrinsics").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(198, 149, 198));
+                highlighting.GetNamedColor("JavaScriptKeyWords").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(190, 146, 198));
+                highlighting.GetNamedColor("JavaScriptLiterals").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(200, 75, 68));  
+                highlighting.GetNamedColor("Regex").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(198, 149, 198));
+                highlighting.GetNamedColor("String").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(153, 199, 148));
+                editorIn.SyntaxHighlighting = highlighting;
+
+                editorOut.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(34, 38, 42));
+                editorOut.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(216, 222, 233));
+            }
+            else
+            {
+
+                editorIn.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+                editorIn.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0));
+                editorIn.TextArea.SelectionBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120, 100, 120, 170));
+                editorIn.TextArea.Caret.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 220, 220));
+                editorIn.TextArea.TextView.CurrentLineBackground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(20, 255, 255, 255));
+
+                var highlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+                highlighting.GetNamedColor("Character").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(163, 21, 21));
+                highlighting.GetNamedColor("Comment").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(0, 128, 0));
+                highlighting.GetNamedColor("Digits").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(9, 134, 88)); 
+                highlighting.GetNamedColor("JavaScriptGlobalFunctions").Foreground = new SimpleHighlightingBrush(Colors.Black);
+                highlighting.GetNamedColor("JavaScriptIntrinsics").Foreground = new SimpleHighlightingBrush(Colors.Black);
+                highlighting.GetNamedColor("JavaScriptKeyWords").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(0, 0, 255));
+                highlighting.GetNamedColor("JavaScriptLiterals").Foreground = new SimpleHighlightingBrush(Colors.Black);
+                highlighting.GetNamedColor("Regex").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(129, 31, 63));
+                highlighting.GetNamedColor("String").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(163, 21, 21)); 
+                editorIn.SyntaxHighlighting = highlighting;
+
+                editorOut.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(238, 238, 238)); 
+                editorOut.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0));
+            }
+        }
     }
 }

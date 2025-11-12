@@ -30,8 +30,13 @@ $innoInstallPath = 'iscc'
 
 $CERT_CODE = $env:CERT_CODE
 Write-Host "CERT_CODE=>$CERT_CODE<"
+
 $CERT_PWD = $env:CERT_PWD
 Write-Host "CERT_PWD=>$CERT_PWD<"
+
+$CERT_PUBLISHER = $env:CERT_PUBLISHER
+Write-Host "CERT_PUBLISHER=>$CERT_PUBLISHER<"
+
 $tag = git describe --tags --abbrev=0
 Write-Output "TAG=>$tag<"
 
@@ -60,7 +65,7 @@ foreach ($path in $paths) {
 Write-Output "################## BUILD PACKAGE"
 $version = Get-Content -Path ".\version.txt" -TotalCount 1
 Write-Output "################## VERSION $version" 
-& $innoInstallPath /q MtExpSolver.iss /DMyAppVersion=$version /DMyAppPublisher="Success Company, s.r.o." /DMyAppURL="https://pekand.com/page/MtExpSolver"
+& $innoInstallPath /q MtExpSolver.iss /DMyAppVersion=$version /DMyAppPublisher="$CERT_PUBLISHER" /DMyAppURL="https://pekand.com/page/MtExpSolver"
 
 ########################################
 
@@ -76,7 +81,5 @@ foreach ($file in $exeFiles) {
     $hash = Get-FileHash -Path $TARGET -Algorithm SHA256
     $hash.Hash | Out-File -FilePath "$TARGET.SHA256"
 }
-
-
 
 Read-Host "Press Enter to continue"

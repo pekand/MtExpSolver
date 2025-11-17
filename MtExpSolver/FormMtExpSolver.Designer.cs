@@ -42,7 +42,10 @@
             mostTopToolStripMenuItem = new ToolStripMenuItem();
             darkModeToolStripMenuItem = new ToolStripMenuItem();
             exitToolStripMenuItem = new ToolStripMenuItem();
+            splitContainer = new SplitContainer();
             contextMenuStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer).BeginInit();
+            splitContainer.SuspendLayout();
             SuspendLayout();
             // 
             // contextMenuStrip
@@ -111,14 +114,14 @@
             // mostTopToolStripMenuItem
             // 
             mostTopToolStripMenuItem.Name = "mostTopToolStripMenuItem";
-            mostTopToolStripMenuItem.Size = new Size(180, 24);
+            mostTopToolStripMenuItem.Size = new Size(152, 24);
             mostTopToolStripMenuItem.Text = "Most top";
             mostTopToolStripMenuItem.Click += mostTopToolStripMenuItem_Click;
             // 
             // darkModeToolStripMenuItem
             // 
             darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
-            darkModeToolStripMenuItem.Size = new Size(180, 24);
+            darkModeToolStripMenuItem.Size = new Size(152, 24);
             darkModeToolStripMenuItem.Text = "Dark mode";
             darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
             // 
@@ -129,6 +132,16 @@
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
+            // splitContainer
+            // 
+            splitContainer.Dock = DockStyle.Fill;
+            splitContainer.Location = new Point(0, 0);
+            splitContainer.Name = "splitContainer";
+            splitContainer.Orientation = Orientation.Horizontal;
+            splitContainer.Size = new Size(911, 645);
+            splitContainer.SplitterDistance = 495;
+            splitContainer.TabIndex = 1;
+            // 
             // FormMtExpSolver
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -136,6 +149,7 @@
             BackColor = Color.White;
             ClientSize = new Size(911, 645);
             ContextMenuStrip = contextMenuStrip;
+            Controls.Add(splitContainer);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormMtExpSolver";
             StartPosition = FormStartPosition.CenterScreen;
@@ -144,6 +158,8 @@
             Load += FormMtExpSolver_Load;
             Resize += FormMtExpSolver_Resize;
             contextMenuStrip.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer).EndInit();
+            splitContainer.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -161,5 +177,6 @@
         private ToolStripMenuItem optionsToolStripMenuItem;
         private ToolStripMenuItem mostTopToolStripMenuItem;
         private ToolStripMenuItem darkModeToolStripMenuItem;
+        private SplitContainer splitContainer;
     }
 }

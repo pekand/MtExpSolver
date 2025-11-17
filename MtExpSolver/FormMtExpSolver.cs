@@ -4,7 +4,9 @@ using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
 using System;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -61,7 +63,7 @@ namespace MtExpSolver
 
             editorIn = new TextEditor();
             elementHostIn = new ElementHost();
-            elementHostIn.Dock = DockStyle.Top;
+            elementHostIn.Dock = DockStyle.Fill;
             elementHostIn.Child = editorIn;
             elementHostIn.ContextMenuStrip = contextMenuStrip;
 
@@ -73,7 +75,8 @@ namespace MtExpSolver
             editorIn.TextChanged += this.scintillaIn_TextChanged;
             editorIn.KeyDown += KeyDown;
             editorIn.PreviewMouseWheel += this.EditorIn_MouseWheel;
-            this.Controls.Add(elementHostIn);
+            this.splitContainer.Panel1.Controls.Add(elementHostIn);
+            //this.Controls.Add(elementHostIn);
 
             ///////////////////////////
 
@@ -86,7 +89,7 @@ namespace MtExpSolver
             editorOut.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
 
             elementHostOut = new ElementHost();
-            elementHostOut.Dock = DockStyle.Bottom;
+            elementHostOut.Dock = DockStyle.Fill;
             elementHostOut.Child = editorOut;
             elementHostOut.ContextMenuStrip = contextMenuStrip;
 
@@ -99,7 +102,8 @@ namespace MtExpSolver
             editorOut.PreviewMouseWheel += this.EditorOut_MouseWheel;
             editorOut.KeyDown += KeyDown;
             editorOut.IsReadOnly = true;
-            this.Controls.Add(elementHostOut);
+            this.splitContainer.Panel2.Controls.Add(elementHostOut);
+            //this.Controls.Add(elementHostOut);
 
             editorDefaultBackground = editorIn.Background;
             editorDefaultForeground = editorIn.Foreground;
@@ -306,8 +310,29 @@ namespace MtExpSolver
                     if (script.Trim() != "")
                     {
                         this.Write("");
-                        var result = await RunScriptAsync(script, timeout: 5000);
-                        this.Write(result.ToString());
+                        ScriptResult? result = await RunScriptAsync(script, timeout: 5000);
+
+                        if (result != null)
+                        {
+                            if (result.error != null)
+                            {
+                                this.Write(result.error);
+                            } else if (result.json != null)
+                            {
+                                this.Write(result.json.ToString());
+                            }
+                            else if (result.result != null)
+                            {
+                                this.Write(result.result.ToString());
+                            }
+                            else
+                            {
+                                this.Write("");
+                            }
+                        }
+                        else {
+                            this.Write("");
+                        }
                     }
                     else
                     {
@@ -340,11 +365,33 @@ namespace MtExpSolver
                 return;
             }
 
-            elementHostIn.Height = (this.ClientSize.Height / 4) * 3;
-            elementHostOut.Height = (this.ClientSize.Height / 4) * 1;
+            //elementHostIn.Height = (this.ClientSize.Height / 4) * 3;
+            //elementHostOut.Height = (this.ClientSize.Height / 4) * 1;
+
+
         }
 
-        private async Task<object?> RunScriptAsync(string jsCode, int timeout)
+
+        public string jsonPretty(string jsonString) {
+            try
+            {
+                var jsonElement = JsonSerializer.Deserialize<JsonElement>(jsonString);
+                string pretty = JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+                return pretty;
+            }
+            catch (Exception)
+            {
+
+               
+            }
+
+            return jsonString;
+        }
+
+        private async Task<ScriptResult?> RunScriptAsync(string jsCode, int timeout)
         {
             return await Task.Run(() =>
             {
@@ -368,11 +415,30 @@ namespace MtExpSolver
 
                                 engine.AddHostObject("console", this.consoleWrapper);
 
-                                return engine.Evaluate(wrappedExpression);
+                                ScriptResult result = new ScriptResult();
+                                result.result =  engine.Evaluate(wrappedExpression);
+
+                                if (result.result != null) {
+                                    System.Type t = result.result.GetType();
+                                    if (t == typeof(string) ||
+                                    t == typeof(int) ||
+                                    t == typeof(double) ||
+                                    t == typeof(bool))
+                                    {
+                                        result.basic = result.result.ToString();
+                                    }
+                                    else {
+                                        result.json = this.jsonPretty(engine.Script.JSON.stringify(result.result));
+                                    }
+                                }
+
+                                return result;
                             }
                             catch (ScriptInterruptedException)
                             {
-                                return "Script execution timed out.";
+                                ScriptResult result = new ScriptResult();
+                                result.error = "Script execution timed out.";
+                                return result;
                             }
                             finally
                             {
@@ -383,7 +449,7 @@ namespace MtExpSolver
                 }
                 catch (ScriptEngineException ex)
                 {
-                    string message = "";
+                   string message = "";
 
                     message += ex.ErrorDetails + "\n";
 
@@ -399,11 +465,15 @@ namespace MtExpSolver
                         }
                     }*/
 
-                    return message;
+                    ScriptResult result = new ScriptResult();
+                    result.error = message;
+                    return result;
                 }
                 catch (Exception ex)
                 {
-                    return ex.Message;
+                    ScriptResult result = new ScriptResult();
+                    result.error = ex.Message;
+                    return result;                    
                 }
 
             });
@@ -414,11 +484,11 @@ namespace MtExpSolver
             Application.Exit();
         }
 
-        public void Write(string message)
+        public void Write(string? message)
         {
             if (editorOut.Text != message)
             {
-                editorOut.Text = message;
+                editorOut.Text = message ?? "";
             }
 
         }
@@ -457,7 +527,8 @@ namespace MtExpSolver
                     new XElement("TopMost", this.TopMost),
                     new XElement("DarkMode", this.darkMode),
                     new XElement("FontInSize", editorIn.FontSize),
-                    new XElement("FontOutSize", editorOut.FontSize)
+                    new XElement("FontOutSize", editorOut.FontSize),
+                    new XElement("SplitterDistance", splitContainer.SplitterDistance)                    
                 );
 
                 xml.Save(this.path);
@@ -490,6 +561,7 @@ namespace MtExpSolver
                 this.darkMode = bool.Parse(xml.Element("DarkMode")?.Value);
                 this.editorIn.FontSize = int.Parse(xml.Element("FontInSize")?.Value);
                 this.editorOut.FontSize = int.Parse(xml.Element("FontOutSize")?.Value);
+                this.splitContainer.SplitterDistance = int.Parse(xml.Element("SplitterDistance")?.Value);
 
             }
             catch (Exception ex)
@@ -604,6 +676,7 @@ namespace MtExpSolver
         }
 
 
+        // TOOL DARK MODE
         public void switchDarkMode() {
             if (editorIn == null || editorOut== null)
             {
@@ -621,6 +694,8 @@ namespace MtExpSolver
 
             if (this.darkMode)
             {
+
+                this.splitContainer.BackColor = System.Drawing.Color.FromArgb(255,48, 56, 65);
 
                 editorIn.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 56, 65));
                 editorIn.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(216, 222, 233));
@@ -645,6 +720,8 @@ namespace MtExpSolver
             }
             else
             {
+
+                this.splitContainer.BackColor = System.Drawing.Color.FromArgb(255, 255, 255, 255);
 
                 editorIn.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
                 editorIn.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0));

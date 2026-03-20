@@ -152,10 +152,11 @@
             Controls.Add(splitContainer);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormMtExpSolver";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.Manual;
             Text = "MtExpSolver";
             FormClosing += FormMtExpSolver_FormClosing;
             Load += FormMtExpSolver_Load;
+            Shown += FormMtExpSolver_Shown;
             Resize += FormMtExpSolver_Resize;
             contextMenuStrip.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer).EndInit();

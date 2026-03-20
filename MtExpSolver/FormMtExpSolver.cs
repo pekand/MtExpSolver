@@ -71,7 +71,7 @@ namespace MtExpSolver
             editorIn.WordWrap = true;
             editorIn.FontFamily = new System.Windows.Media.FontFamily("Consolas");
             editorIn.FontSize = 20;
-            editorIn.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");            
+            editorIn.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
             editorIn.TextChanged += this.scintillaIn_TextChanged;
             editorIn.KeyDown += KeyDown;
             editorIn.PreviewMouseWheel += this.EditorIn_MouseWheel;
@@ -121,7 +121,21 @@ namespace MtExpSolver
 
             this.switchDarkMode();
 
-            locked = false;            
+            locked = false;
+
+            this.SetFormTitle();
+        }
+
+        public void SetFormTitle() {
+            string title = "MtExpSolver";
+
+            if (this.path != Program.defaultRoamingPath) {
+                title = title + " - " + this.path;
+            }
+
+            if (this.Text != title) {
+                this.Text = title;
+            }
         }
 
         public void CreateContextmenuItems()
@@ -317,7 +331,8 @@ namespace MtExpSolver
                             if (result.error != null)
                             {
                                 this.Write(result.error);
-                            } else if (result.json != null)
+                            }
+                            else if (result.json != null)
                             {
                                 this.Write(result.json.ToString());
                             }
@@ -330,7 +345,8 @@ namespace MtExpSolver
                                 this.Write("");
                             }
                         }
-                        else {
+                        else
+                        {
                             this.Write("");
                         }
                     }
@@ -371,8 +387,8 @@ namespace MtExpSolver
 
         }
 
-
-        public string jsonPretty(string jsonString) {
+        public string jsonPretty(string jsonString)
+        {
             try
             {
                 var jsonElement = JsonSerializer.Deserialize<JsonElement>(jsonString);
@@ -385,7 +401,7 @@ namespace MtExpSolver
             catch (Exception)
             {
 
-               
+
             }
 
             return jsonString;
@@ -416,9 +432,10 @@ namespace MtExpSolver
                                 engine.AddHostObject("console", this.consoleWrapper);
 
                                 ScriptResult result = new ScriptResult();
-                                result.result =  engine.Evaluate(wrappedExpression);
+                                result.result = engine.Evaluate(wrappedExpression);
 
-                                if (result.result != null) {
+                                if (result.result != null)
+                                {
                                     System.Type t = result.result.GetType();
                                     if (t == typeof(string) ||
                                     t == typeof(int) ||
@@ -427,7 +444,8 @@ namespace MtExpSolver
                                     {
                                         result.basic = result.result.ToString();
                                     }
-                                    else {
+                                    else
+                                    {
                                         result.json = this.jsonPretty(engine.Script.JSON.stringify(result.result));
                                     }
                                 }
@@ -449,7 +467,7 @@ namespace MtExpSolver
                 }
                 catch (ScriptEngineException ex)
                 {
-                   string message = "";
+                    string message = "";
 
                     message += ex.ErrorDetails + "\n";
 
@@ -473,7 +491,7 @@ namespace MtExpSolver
                 {
                     ScriptResult result = new ScriptResult();
                     result.error = ex.Message;
-                    return result;                    
+                    return result;
                 }
 
             });
@@ -520,15 +538,15 @@ namespace MtExpSolver
                 var xml = new XElement("Root",
                     new XElement("in", editorIn.Text),
                     new XElement("out", editorOut.Text),
-                    new XElement("Left", this.Left),
-                    new XElement("Top", this.Top),
-                    new XElement("Width", this.Width),
-                    new XElement("Height", this.Height),
+                    new XElement("Left", this.Left > 0 ? this.Left : 0),
+                    new XElement("Top", this.Top > 0 ? this.Top : 0),
+                    new XElement("Width", this.Width > 100 ? this.Width : 300),
+                    new XElement("Height", this.Height > 100 ? this.Height : 500),
                     new XElement("TopMost", this.TopMost),
                     new XElement("DarkMode", this.darkMode),
                     new XElement("FontInSize", editorIn.FontSize),
                     new XElement("FontOutSize", editorOut.FontSize),
-                    new XElement("SplitterDistance", splitContainer.SplitterDistance)                    
+                    new XElement("SplitterDistance", splitContainer.SplitterDistance)
                 );
 
                 xml.Save(this.path);
@@ -594,6 +612,7 @@ namespace MtExpSolver
                 {
                     this.path = saveFileDialog.FileName;
                     SaveState();
+                    this.SetFormTitle();
                 }
             }
         }
@@ -608,8 +627,12 @@ namespace MtExpSolver
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    this.path = openFileDialog.FileName;
-                    RestoreState();
+                    if (Program.createMutex(openFileDialog.FileName))
+                    {
+                        this.path = openFileDialog.FileName;                        
+                        RestoreState();
+                        this.SetFormTitle();
+                    }
                 }
             }
         }
@@ -677,8 +700,9 @@ namespace MtExpSolver
 
 
         // TOOL DARK MODE
-        public void switchDarkMode() {
-            if (editorIn == null || editorOut== null)
+        public void switchDarkMode()
+        {
+            if (editorIn == null || editorOut == null)
             {
                 return;
             }
@@ -695,7 +719,7 @@ namespace MtExpSolver
             if (this.darkMode)
             {
 
-                this.splitContainer.BackColor = System.Drawing.Color.FromArgb(255,48, 56, 65);
+                this.splitContainer.BackColor = System.Drawing.Color.FromArgb(255, 48, 56, 65);
 
                 editorIn.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 56, 65));
                 editorIn.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(216, 222, 233));
@@ -710,7 +734,7 @@ namespace MtExpSolver
                 highlighting.GetNamedColor("JavaScriptGlobalFunctions").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(216, 222, 233));
                 highlighting.GetNamedColor("JavaScriptIntrinsics").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(198, 149, 198));
                 highlighting.GetNamedColor("JavaScriptKeyWords").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(190, 146, 198));
-                highlighting.GetNamedColor("JavaScriptLiterals").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(200, 75, 68));  
+                highlighting.GetNamedColor("JavaScriptLiterals").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(200, 75, 68));
                 highlighting.GetNamedColor("Regex").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(198, 149, 198));
                 highlighting.GetNamedColor("String").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(153, 199, 148));
                 editorIn.SyntaxHighlighting = highlighting;
@@ -732,17 +756,42 @@ namespace MtExpSolver
                 var highlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
                 highlighting.GetNamedColor("Character").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(163, 21, 21));
                 highlighting.GetNamedColor("Comment").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(0, 128, 0));
-                highlighting.GetNamedColor("Digits").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(9, 134, 88)); 
+                highlighting.GetNamedColor("Digits").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(9, 134, 88));
                 highlighting.GetNamedColor("JavaScriptGlobalFunctions").Foreground = new SimpleHighlightingBrush(Colors.Black);
                 highlighting.GetNamedColor("JavaScriptIntrinsics").Foreground = new SimpleHighlightingBrush(Colors.Black);
                 highlighting.GetNamedColor("JavaScriptKeyWords").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(0, 0, 255));
                 highlighting.GetNamedColor("JavaScriptLiterals").Foreground = new SimpleHighlightingBrush(Colors.Black);
                 highlighting.GetNamedColor("Regex").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(129, 31, 63));
-                highlighting.GetNamedColor("String").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(163, 21, 21)); 
+                highlighting.GetNamedColor("String").Foreground = new SimpleHighlightingBrush(System.Windows.Media.Color.FromRgb(163, 21, 21));
                 editorIn.SyntaxHighlighting = highlighting;
 
-                editorOut.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(238, 238, 238)); 
+                editorOut.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(238, 238, 238));
                 editorOut.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0));
+            }
+        }
+
+        // TOOL - WINDOW POSITION
+        bool IsFormOnAnyScreen(Form form)
+        {
+            return Screen.AllScreens.Any(s => s.WorkingArea.IntersectsWith(form.Bounds));
+        }
+
+        // TOOL - WINDOW POSITION
+        void CenterFormOnPrimaryScreen(Form form)
+        {
+            var area = Screen.PrimaryScreen.WorkingArea;
+            form.Location = new Point(
+                area.Left + (area.Width - form.Width) / 2,
+                area.Top + (area.Height - form.Height) / 2
+            );
+        }
+
+        // TOOL - WINDOW POSITION
+        private void FormMtExpSolver_Shown(object sender, EventArgs e)
+        {
+            if (!this.IsFormOnAnyScreen(this))
+            {
+                this.CenterFormOnPrimaryScreen(this);
             }
         }
     }

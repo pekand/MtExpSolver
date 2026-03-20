@@ -9,6 +9,7 @@ namespace MtExpSolver
     {
         public static string AppName = "MtExpSolver";
         public static string roamingPath = "";
+        public static string defaultRoamingPath = "";
 
         public static FormMtExpSolver? formMtExpSolver = null;
 
@@ -52,7 +53,7 @@ namespace MtExpSolver
         {
             ApplicationConfiguration.Initialize();
 
-            string path = "";
+            string path = "";            
 
             roamingPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -65,7 +66,7 @@ namespace MtExpSolver
             }
 
             path = Path.Combine(roamingPath, "config.MtExpSolver");
-
+            defaultRoamingPath = path;
 
             if (args.Length > 0)
             {
